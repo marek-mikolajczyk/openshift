@@ -1,0 +1,9 @@
+
+rhv - 64GB is sufficient to install, from this page:
+https://itnext.io/guide-installing-an-okd-4-5-cluster-508a2631cbee
+
+make isos
+
+
+console doesn't work - solution is to delete ingres...
+https://stackoverflow.com/questions/65570498/lost-my-openshift-console-application-is-not-available

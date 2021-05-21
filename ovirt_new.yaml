@@ -1,0 +1,53 @@
+- name: modify the disks
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+          #    - name: install ovirt pip
+          #pip: 
+          #name:ovirt-engine-sdk-python
+          #delegate_to: localhost
+          #runc_once: yes
+
+    - name: Obtain SSO token
+      ovirt_auth:
+        state: present
+        insecure: yes
+      delegate_to: localhost
+      run_once: yes
+
+    - ovirt.ovirt.ovirt_vm_info:
+      register: result
+      delegate_to: localhost
+      run_once: yes
+
+    - ansible.builtin.debug:
+        msg: "{{ result.ovirt_vms }}"
+      delegate_to: localhost
+      run_once: yes
+
+
+    - name: Stop vm
+      ovirt_vm:
+        state: stopped
+        name: "{{ item }}"
+      loop:
+        - okd4-bootstrap
+        - okd4-control-plane-1
+        - okd4-control-plane-2
+        - okd4-control-plane-3
+
+          #    - name: detach disks
+    # Detach disk from VM
+    # ovirt_disk:
+    #    state: detached
+    ##    name: "{{ item }}"
+    #   vm_name: rhel7
+    #   size: 10GiB
+    #   format: cow
+    #   interface: virtio
+    # loop:
+    #   - okd-bootstrap_Disk1
+    #   - okd-control-plane-1_Disk1
+    #   - okd-control-plane-2_Disk1
+    #   - okd-control-plane-3_Disk1
