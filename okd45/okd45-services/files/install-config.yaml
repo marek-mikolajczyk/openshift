@@ -1,0 +1,30 @@
+apiVersion: v1
+baseDomain: okd.local
+metadata:
+  name: lab
+
+compute:
+- hyperthreading: Enabled
+  name: worker
+  replicas: 2
+
+controlPlane:
+  hyperthreading: Enabled
+  name: master
+  replicas: 3
+
+networking:
+  clusterNetwork:
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
+  networkType: OpenShiftSDN
+  serviceNetwork:
+  - 172.30.0.0/16
+
+platform:
+  none: {}
+
+fips: false
+
+pullSecret: '{"auths":{"fake":{"auth": "bar"}}}'
+sshKey: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCvietkG1kyWRTNfkFw9M6YBVCQJ0v71JJONB3eb/gHveI+lCw8iMaLSo+rVGoCrRk75lmemp6GEAtO7CjRWQhyaO0rFzhhTSNTREbZVlO1AU3NLYPH4heAwNOranmoZTDz+i/dIzLiYFTNTN2Uj6+aKbTrY1bY/9Jfy7+YWVDoPFh7rYUK3VWEwR7jxGRJk61qT5uOOtCH8PpWIzSsh8eNDyLn92DVyFk+OKY1sSfBOmtZTgPWhoEg0XCK/d6q2AhOyA8m0xoLTvJVY3dRwPo1iYalH9pPPqzbNks0n1w+qL4J/ZF51Q5Ds6FzpB5y4iY1OWRQm5ypN+xvNYbv2rPQmIDuoAKbO0MovYkyc6kldKDRZYXDDrqQgB2DlYaa4PNPetddqZ0aUXc9xEJj0KXkvqMertwCdrLZ10y7k/rLXOUp+J5n7mSds5Lkgq6iuklfZ+wTw6b40iSW+pqv+G4qb2kvIKIUosRTQTX+0C0v5JoC6TrIg7MHYXl9LH0AE2c= marek@local'

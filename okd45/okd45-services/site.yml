@@ -1,0 +1,24 @@
+- name: install requirements - python
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: install packages
+      package:
+        name: sshpass
+        state: present
+      become: true
+      delegate_to: localhost
+      run_once: yes
+
+
+    - name: install python libraries
+      shell: pip3  install -r requirements.txt --user
+      delegate_to: localhost
+      run_once: yes
+      
+- name: prepare okd4-services             
+  become: true                            
+  hosts: okd4-services
+  gather_facts: False                     
+  roles:
+    - ../okd45-services

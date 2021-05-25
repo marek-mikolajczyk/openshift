@@ -8,3 +8,7 @@
 
 
 oc -o yaml new-app centos/php-73-centos7~https://github.com/RedHatTraining/DO180-apps --context-dir  php-helloworld  --allow-missing-images --allow-missing-imagestream-tags --name php-helloworld > my-new-app.yaml
+
+
+cli: new-app, route
+gui: automated, uses template

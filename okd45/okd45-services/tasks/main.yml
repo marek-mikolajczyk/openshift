@@ -1,0 +1,183 @@
+- name: install packages
+  dnf:
+    name: epel-release
+    state: latest
+  
+- name: update all packages
+  dnf:
+    name: "*"
+    state: latest
+  register: is_updated
+  
+- name: Reboot 
+  reboot:
+    reboot_timeout: 900
+  when: is_updated changed
+
+- name: install packages
+  dnf:
+    name: 
+      - xrdp 
+      - tigervnc-server
+      - firefox
+      - git
+      - bind 
+      - bind-utils
+      - haproxy 
+      - httpd
+
+
+- name: get git files
+  git:
+    repo: https://github.com/cragr/okd4_files.git
+    dest: /root/okd4_files
+
+- name: configure bind
+  shell: |
+    cp /root/okd4_files/named.conf /etc/named.conf
+    cp /root/okd4_files/named.conf.local /etc/named/
+    mkdir /etc/named/zones
+    cp /root/okd4_files/db* /etc/named/zones
+
+
+### haproxy
+
+- name: configure haproxy
+  shell: |
+    cp /root/okd4_files/haproxy.cfg /etc/haproxy/haproxy.cfg
+    setsebool -P haproxy_connect_any 1
+
+
+
+- name: setup openshift installer files
+  shell: |
+    mkdir /root/install_dir
+    cp /root/okd4_files/install-config.yaml ./install_dir
+
+### okd binaries
+
+- name: download files
+  get_url:
+    url: "{{ item }}"
+    dest: /root
+  loop:
+    - https://github.com/openshift/okd/releases/download/4.5.0-0.okd-2020-07-29-070316/openshift-client-linux-4.5.0-0.okd-2020-07-29-070316.tar.gz
+    - https://github.com/openshift/okd/releases/download/4.5.0-0.okd-2020-07-29-070316/openshift-install-linux-4.5.0-0.okd-2020-07-29-070316.tar.gz
+
+- name: unarchive tars
+  unarchive:
+    src: /root/{{ item }}
+    dest: /root/
+    remote_src: yes
+  loop:
+    - openshift-client-linux-4.5.0-0.okd-2020-07-29-070316.tar.gz
+    - openshift-install-linux-4.5.0-0.okd-2020-07-29-070316.tar.gz
+
+- name: move files
+  shell: mv /root/{kubectl,oc,openshift-install} /usr/local/bin/
+
+- name: copy okd config
+  copy:
+    src: install-config.yaml
+    dest: /root/install_dir/install-config.yaml
+  
+- name: generate okd files
+  shell: |
+    openshift-install create manifests --dir=/root/install_dir/
+    openshift-install create ignition-configs --dir=/root/install_dir/
+
+
+### private keys
+
+- name: make ssh dir
+  file:
+    path: /root/.ssh
+    state: directory
+    mode: '0700'
+
+- name: send ssh key
+  copy: 
+    src: id_rsa_okd4-services
+    dest: /root/.ssh/
+    mode: '0400'
+  
+
+### apache
+
+- name: configure httpd
+  ansible.builtin.lineinfile:
+    path: /etc/httpd/conf/httpd.conf
+    regexp: '^Listen 80$'
+    line: Listen 8080
+
+- name: prepare apache hosting dir
+  shell: |
+    mkdir /var/www/html/okd4
+    cp -R /root/install_dir/* /var/www/html/okd4/
+    chown -R apache /var/www/html/
+    chmod -R 755 /var/www/html/
+
+- name: download images
+  shell: |
+    cd /var/www/html/okd4/
+    wget https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/32.20200715.3.0/x86_64/fedora-coreos-32.20200715.3.0-metal.x86_64.raw.xz
+    wget https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/32.20200715.3.0/x86_64/fedora-coreos-32.20200715.3.0-metal.x86_64.raw.xz.sig
+    mv fedora-coreos-32.20200715.3.0-metal.x86_64.raw.xz fcos.raw.xz
+    mv fedora-coreos-32.20200715.3.0-metal.x86_64.raw.xz.sig fcos.raw.xz.sig
+    setsebool -P httpd_read_user_content 1
+    
+### firewalld
+
+- name: add firewall rules - services
+  firewalld:
+    zone: public
+    permanent: yes
+    state: enabled
+    service: "{{ item }}"
+  loop:
+      - dns
+      - http
+      - https
+
+- name: add firewall rules -  ports
+  firewalld:
+    port: "{{ item }}"
+    zone: public
+    permanent: yes
+    state: enabled
+  loop:
+    - 3389/tcp
+    - 6443/tcp
+    - 22623/tcp
+    - 8080/tcp
+  
+
+### services
+
+- name: enable services
+  systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  loop:
+    - httpd
+    - xrdp
+    - named
+    - haproxy
+
+- name: add kubeconfig env
+  lineinfile:
+    line: export KUBECONFIG=~/install_dir/auth/kubeconfig
+    path: /root/.bashrc
+
+### nic2 config
+
+- name: change dns on nic2
+  community.general.nmcli:
+    conn_name: enp2s0
+    type: ethernet
+    ip4: 192.168.1.210/24
+    gw4: 192.168.1.1
+    dns4: 127.0.0.1
+    state: present
+

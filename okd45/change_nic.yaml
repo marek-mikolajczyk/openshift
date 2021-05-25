@@ -1,0 +1,24 @@
+- name: change nic
+  become: true
+  hosts: all
+  gather_facts: false
+  tasks:
+
+      - name: make sure nmcli pip is installed
+        pip:
+          name: nmcli
+        delegate_to: localhost
+
+      - name: change dns on nic2
+        community.general.nmcli:
+          conn_name: enp2s0
+          type: ethernet
+          ip4: 192.168.1.210
+          gw4: 192.168.1.1
+          dns4: 127.0.0.1
+          state: present
+
+      - name: restart NetworkManager
+        systemd:
+          name: NetworkManager
+          state: restarted
