@@ -12,7 +12,7 @@
 - name: Reboot 
   reboot:
     reboot_timeout: 900
-  when: is_updated changed
+  when: is_updated.changed
 
 - name: install packages
   dnf:
@@ -74,7 +74,8 @@
     - openshift-install-linux-4.5.0-0.okd-2020-07-29-070316.tar.gz
 
 - name: move files
-  shell: mv /root/{kubectl,oc,openshift-install} /usr/local/bin/
+  shell: |
+    mv /root/{kubectl,oc,openshift-install} /usr/local/bin/
 
 - name: copy okd config
   copy:
@@ -130,7 +131,6 @@
 
 - name: add firewall rules - services
   firewalld:
-    zone: public
     permanent: yes
     state: enabled
     service: "{{ item }}"
@@ -145,6 +145,7 @@
     zone: public
     permanent: yes
     state: enabled
+    immediate: yes
   loop:
     - 3389/tcp
     - 6443/tcp
@@ -181,3 +182,18 @@
     dns4: 127.0.0.1
     state: present
 
+- name: change  NM def
+  community.general.ini_file:
+    path: /etc/NetworkManager/NetworkManager.conf
+    section: main
+    option: dns
+    value: none
+    create: yes
+    no_extra_spaces: yes
+
+- name: send resolv config
+  copy: 
+    src: resolv.conf
+    dest: /etc/
+    mode: '0644'
+  

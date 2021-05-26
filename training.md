@@ -12,3 +12,11 @@ oc -o yaml new-app centos/php-73-centos7~https://github.com/RedHatTraining/DO180
 
 cli: new-app, route
 gui: automated, uses template
+
+
+chapter 2
+podman run - parameters after image name as entry point. don't use -d. run overrides. httpd won't sttrt
+entrypoint - process started inside container
+-e TEST=123 printenv TEST
+exec - access container
+podman inspect | grep Env
