@@ -197,3 +197,8 @@
     dest: /etc/
     mode: '0644'
   
+
+- name: Restart NM
+  systemd:
+    name: NetworkManager
+    state: restarted
