@@ -115,16 +115,10 @@
   shell: |
     mkdir /var/www/html/okd4
     cp -R /root/install_dir/* /var/www/html/okd4/
+    wget -o /var/www/html/okd4/fcos.raw.xz  https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/32.20200715.3.0/x86_64/fedora-coreos-32.20200715.3.0-metal.x86_64.raw.xz
+    wget -o /var/www/html/okd4/fcos.raw.xz.sig  https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/32.20200715.3.0/x86_64/fedora-coreos-32.20200715.3.0-metal.x86_64.raw.xz.sig
     chown -R apache /var/www/html/
     chmod -R 755 /var/www/html/
-
-- name: download images
-  shell: |
-    cd /var/www/html/okd4/
-    wget https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/32.20200715.3.0/x86_64/fedora-coreos-32.20200715.3.0-metal.x86_64.raw.xz
-    wget https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/32.20200715.3.0/x86_64/fedora-coreos-32.20200715.3.0-metal.x86_64.raw.xz.sig
-    mv fedora-coreos-32.20200715.3.0-metal.x86_64.raw.xz fcos.raw.xz
-    mv fedora-coreos-32.20200715.3.0-metal.x86_64.raw.xz.sig fcos.raw.xz.sig
     setsebool -P httpd_read_user_content 1
     
 ### firewalld
