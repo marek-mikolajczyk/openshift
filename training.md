@@ -20,3 +20,11 @@ entrypoint - process started inside container
 -e TEST=123 printenv TEST
 exec - access container
 podman inspect | grep Env
+linux-1 ansible_host=1.2.3.4
+
+
+
+
+chapter 2
+egistry_name/user_name/image_name:tag
+podman search --list-tags registry.access.redhat.com/rhel
